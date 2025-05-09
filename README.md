@@ -12,232 +12,160 @@
 
 Третий интерфейс — это админка. Преимущественно им пользуются программисты при разработке сайта. Также сюда заходит менеджер, чтобы обновить меню ресторанов Star Burger.
 
-## Как запустить dev-версию сайта
 
-Для запуска сайта нужно запустить **одновременно** бэкенд и фронтенд, в двух терминалах.
 
-### Как собрать бэкенд
+### Предварительные требования
+- Docker (версия 20.10+)
+- Docker Compose (версия 2.0+)
+- Git
 
-Скачайте код:
+### Локальная разработка
 
-```sh
-git clone https://github.com/devmanorg/star-burger.git
+#### 1. Клонируйте репозиторий
+```bash
+git clone https://github.com/AndreyBychenkow/Star_Burger_Dockerizations.git
+cd Star_Burger_Dockerizations
 ```
 
-Перейдите в каталог проекта:
-
-```sh
-cd star-burger
+#### 2. Создайте файл .env
+```bash
+cp .env.example .env
 ```
 
-[Установите Python](https://www.python.org/), если этого ещё не сделали.
-
-Проверьте, что `python` установлен и корректно настроен. Запустите его в командной строке:
-
-```sh
-python --version
+Отредактируйте `.env` файл, указав следующие параметры:
+```
+SECRET_KEY=your_secret_key
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+YANDEX_GEOCODER_API_KEY=your_api_key
 ```
 
-**Важно!** Версия Python должна быть не ниже 3.6.
-
-Возможно, вместо команды `python` здесь и в остальных инструкциях этого README придётся использовать `python3`. Зависит это от операционной системы и от того, установлен ли у вас Python старой второй версии.
-
-В каталоге проекта создайте виртуальное окружение:
-
-```sh
-python -m venv venv
+#### 3. Запустите контейнеры
+```bash
+docker-compose up -d
 ```
 
-Активируйте его. На разных операционных системах это делается разными командами:
+После запуска, сайт будет доступен по адресу [http://localhost](http://localhost), а административная панель по адресу [http://localhost/admin](http://localhost/admin).
 
-- Windows: `.\venv\Scripts\activate`
-- MacOS/Linux: `source venv/bin/activate`
-
-Установите зависимости в виртуальное окружение:
-
-```sh
-pip install -r requirements.txt
+#### 4. Остановка контейнеров
+```bash
+docker-compose down
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+#### 5. Просмотр логов
+```bash
+# Логи всех контейнеров
+docker-compose logs
 
-```sh
-SECRET_KEY="django-insecure-0if40nf4nf93n4"
+# Логи конкретного контейнера
+docker-compose logs backend
+docker-compose logs frontend
+```
+
+### Запуск на боевом сервере (продакшн)
+
+#### 1. Подготовка сервера
+Установите Docker и Docker Compose:
+```bash
+apt-get update
+apt-get install -y docker.io docker-compose
+```
+
+#### 2. Клонируйте репозиторий
+```bash
+git clone https://github.com/AndreyBychenkow/Star_Burger_Dockerizations.git
+cd /opt/StarBurgerDockerizations
+```
+
+#### 3. Настройка переменных окружения
+Создайте `.env` файл с боевыми настройками:
+```bash
+cat > .env << EOL
+SECRET_KEY=your_secure_production_key
+DEBUG=False
+ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+YANDEX_GEOCODER_API_KEY=your_api_key
+TOKEN_ROLLBAR_PROD=your_token_rollbar
 DATABASE_URL=postgres://starburger_user:0704@localhost:5432/starburger_dev
-YANDEX_GEOCODER_API_KEY="Ключ Яндекс JavaScript API и HTTP Геокодера"
-ALLOWED_HOSTS = .localhost,127.0.0.1,[::1]
-DEBUG = True
-TOKEN_ROLLBAR_DEV="Токен системы мониторинга Rollbar"
-```
-
-Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
-
-```sh
-python manage.py migrate
-```
-
-Запустите сервер:
-
-```sh
-python manage.py runserver
-```
-
-Откройте сайт в браузере по адресу [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Если вы увидели пустую белую страницу, то не пугайтесь, выдохните. Просто фронтенд пока ещё не собран. Переходите к следующему разделу README.
-
-### Собрать фронтенд
-
-**Откройте новый терминал**. Для работы сайта в dev-режиме необходима одновременная работа сразу двух программ `runserver` и `parcel`. Каждая требует себе отдельного терминала. Чтобы не выключать `runserver` откройте для фронтенда новый терминал и все нижеследующие инструкции выполняйте там.
-
-[Установите Node.js](https://nodejs.org/en/), если у вас его ещё нет.
-
-Проверьте, что Node.js и его пакетный менеджер корректно установлены. Если всё исправно, то терминал выведет их версии:
-
-```sh
-nodejs --version
-# v16.16.0
-# Если ошибка, попробуйте node:
-node --version
-# v16.16.0
-
-npm --version
-# 8.11.0
-```
-
-Версия `nodejs` должна быть не младше `10.0` и не старше `16.16`. Лучше ставьте `16.16.0`, её мы тестировали. Версия `npm` не важна. Как обновить Node.js читайте в статье: [How to Update Node.js](https://phoenixnap.com/kb/update-node-js-version).
-
-Перейдите в каталог проекта и установите пакеты Node.js:
-
-```sh
-cd star-burger
-npm ci --dev
-```
-
-Команда `npm ci` создаст каталог `node_modules` и установит туда пакеты Node.js. Получится аналог виртуального окружения как для Python, но для Node.js.
-
-Помимо прочего будет установлен [Parcel](https://parceljs.org/) — это упаковщик веб-приложений, похожий на [Webpack](https://webpack.js.org/). В отличии от Webpack он прост в использовании и совсем не требует настроек.
-
-Теперь запустите сборку фронтенда и не выключайте. Parcel будет работать в фоне и следить за изменениями в JS-коде:
-
-```sh
-./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
-```
-
-Если вы на Windows, то вам нужна та же команда, только с другими слешами в путях:
-
-```sh
-.\node_modules\.bin\parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
-```
-
-Дождитесь завершения первичной сборки. Это вполне может занять 10 и более секунд. О готовности вы узнаете по сообщению в консоли:
-
-```
-✨  Built in 10.89s
-```
-
-Parcel будет следить за файлами в каталоге `bundles-src`. Сначала он прочитает содержимое `index.js` и узнает какие другие файлы он импортирует. Затем Parcel перейдёт в каждый из этих подключенных файлов и узнает что импортируют они. И так далее, пока не закончатся файлы. В итоге Parcel получит полный список зависимостей. Дальше он соберёт все эти сотни мелких файлов в большие бандлы `bundles/index.js` и `bundles/index.css`. Они полностью самодостаточны, и потому пригодны для запуска в браузере. Именно эти бандлы сервер отправит клиенту.
-
-Теперь если зайти на страницу  [http://127.0.0.1:8000/](http://127.0.0.1:8000/), то вместо пустой страницы вы увидите:
-
-![](https://dvmn.org/filer/canonical/1594651900/687/)
-
-Каталог `bundles` в репозитории особенный — туда Parcel складывает результаты своей работы. Эта директория предназначена исключительно для результатов сборки фронтенда и потому исключёна из репозитория с помощью `.gitignore`.
-
-**Сбросьте кэш браузера <kbd>Ctrl-F5</kbd>.** Браузер при любой возможности старается кэшировать файлы статики: CSS, картинки и js-код. Порой это приводит к странному поведению сайта, когда код уже давно изменился, но браузер этого не замечает и продолжает использовать старую закэшированную версию. В норме Parcel решает эту проблему самостоятельно. Он следит за пересборкой фронтенда и предупреждает JS-код в браузере о необходимости подтянуть свежий код. Но если вдруг что-то у вас идёт не так, то начните ремонт со сброса браузерного кэша, жмите <kbd>Ctrl-F5</kbd>.
-
-## Как запустить prod-версию сайта
-
-Собрать фронтенд:
-
-```sh
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
-```
-
-Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
-
-- `DEBUG` — дебаг-режим. Поставьте `False`.
-- `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
-- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
-- `TOKEN_ROLLBAR_PROD`= "Токен системы мониторинга Rollbar"(для`production`)
-- `DATABASE_URL`=postgres://starburger_user:0704@localhost:5432/starburger_dev
-- `YANDEX_GEOCODER_API_KEY`="Ключ Яндекс JavaScript API и HTTP Геокодера"
-- `ROLLBAR_ENVIRONMENT`="Настройки Rollbar экземпляра проекта. По-умолчанию "production""
-
-Для автоматизированного обновления прод-версии, можно использовать следующий bash-скрипт.
-Создайте файл deploy_star_burger.sh в удобном месте со следующим содержанием:
-
-```
-##!/bin/bash
-
-# Strict mode
-set -euo pipefail
-
-# Variables
-PROJECT_DIR="/opt/StarBurger"
-VENV_PATH="/root/venv/bin/activate"
-SERVICE_NAME="StarBurger.service"
-
-# Load environment variables if .env exists
-if [ -f "$PROJECT_DIR/.env" ]; then
-    export $(grep -v '^#' $PROJECT_DIR/.env | xargs)
-fi
-
-echo -e "${GREEN}>>> Начинаем деплой StarBurger${NC}"
-
-# 1. Обновляем код из Git
-echo -e "${GREEN}>>> Получаем изменения из Git${NC}"
-cd $PROJECT_DIR
-git fetch
-git reset --hard origin/master
-
-# 2. Активируем virtualenv
-echo -e "${GREEN}>>> Активируем virtualenv${NC}"
-source $VENV_PATH
-
-# 3. Устанавливаем Python-зависимости
-echo -e "${GREEN}>>> Устанавливаем Python-зависимости${NC}"
-pip install -U pip
-pip install -r requirements.txt
-
-# 4. Устанавливаем Node.js зависимости (если нужно)
-if [ -f "$PROJECT_DIR/package.json" ]; then
-    echo -e "${GREEN}>>> Устанавливаем Node.js зависимости${NC}"
-    npm ci --dev
-fi
-
-# 5. Собираем фронтенд (если нужно)
-if [ -f "$PROJECT_DIR/webpack.config.js" ]; then
-    echo -e "${GREEN}>>> Собираем фронтенд${NC}"
-    npm run build
-fi
-
-# 6. Применяем миграции
-echo -e "${GREEN}>>> Применяем миграции БД${NC}"
-
-# 7. Собираем статику Django
-echo -e "${GREEN}>>> Собираем статику Django${NC}"
-python manage.py collectstatic --noinput --clear
-
-# 8. Перезапускаем сервисы
-echo -e "${GREEN}>>> Перезапускаем сервисы${NC}"
-systemctl restart $SERVICE_NAME
-systemctl reload nginx.service
-
-echo -e "${GREEN}>>> Деплой успешно завершен!${NC}"
-```
-
-Даем права на выполнение:
-
-```
-chmod +x /opt/StarBurger/deploy_star_burger.sh
-```
-
-Проверяем работу скрипта:
-
-```
-./deploy_star_burger.sh
+ROLLBAR_ENVIRONMENT=production
+DB_PASSWORD=your password
+DB_USER=your_db_user
+DB_NAME=name_your_db
+EOL
 ```
 
 **Проект доступен по ссылке:** [Демо-версия](http://starburger.decebell.site)
+
+#### 4. Настройка HTTPS с Certbot
+
+Установите Certbot:
+```bash
+apt-get install -y certbot python3-certbot-nginx
+```
+
+Внесите изменения в docker-compose.yml:
+```bash
+# Изменить порт с 80:80 на 8081:80 для frontend
+nano docker-compose.yml
+```
+
+Получите SSL-сертификат:
+```bash
+certbot --nginx -d your-domain.com
+```
+
+Создайте конфигурацию Nginx:
+```bash
+cat > /etc/nginx/sites-available/starburger.conf << EOL
+server {
+    listen 80;
+    server_name your-domain.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOL
+```
+
+Активируйте конфигурацию:
+```bash
+ln -sf /etc/nginx/sites-available/starburger.conf /etc/nginx/sites-enabled/
+systemctl restart nginx
+```
+
+Настройте автоматическое обновление сертификатов:
+```bash
+echo "0 0 * * * certbot renew --quiet && systemctl reload nginx" | crontab -
+```
+
+#### 5. Запуск контейнеров
+```bash
+# Дайте права на запуск скрипта деплоя
+chmod +x deploy_star_burger.sh
+
+# Запустите скрипт деплоя
+./deploy_star_burger.sh
+```
+
+#### 6. Обновление до последней версии
+```bash
+cd /opt/StarBurgerDockerizations
+./deploy_star_burger.sh
+```
 
 ## Цели проекта
 
