@@ -47,38 +47,46 @@ if [ ! -f ".env" ]; then
     echo "SECRET_KEY"
     echo "YANDEX_GEOCODER_API_KEY"
     echo "ALLOWED_HOSTS (должен включать $DOMAIN)" 
-    echo "DB_USER, DB_PASSWORD, DB_NAME"
-    echo "POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB"
-    echo "DATABASE_URL"
     exit 1
 fi
+
+# Настройка и запуск PostgreSQL на хосте
+log_info "Проверяем PostgreSQL на хосте"
+if ! command -v psql &> /dev/null; then
+    log_info "PostgreSQL не установлен. Устанавливаем..."
+    apt-get update
+    apt-get install -y postgresql postgresql-contrib
+fi
+
+# Создание БД и пользователя, если они не существуют
+log_info "Настраиваем PostgreSQL"
+if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw starburger_prod; then
+    log_info "Создаем базу данных и пользователя"
+    sudo -u postgres psql -c "CREATE USER starburger_user WITH PASSWORD '0704';" || true
+    sudo -u postgres psql -c "CREATE DATABASE starburger_prod OWNER starburger_user;" || true
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE starburger_prod TO starburger_user;" || true
+fi
+
+# Запуск PostgreSQL
+log_info "Запускаем PostgreSQL на хосте"
+systemctl restart postgresql
+systemctl status postgresql --no-pager
 
 # Останавливаем и удаляем старые контейнеры
 log_info "Останавливаем старые контейнеры"
 docker-compose down || true
-docker rm -f star-burger-db star-burger-backend star-burger-frontend || true
+docker rm -f star-burger-backend star-burger-frontend || true
 
 # Очистка Docker-кэша
 log_info "Очищаем Docker-кэш"
 docker system prune -f || true
 
-# Перезагрузка Docker (крайняя мера для решения проблем с запуском)
-log_info "Перезагружаем Docker"
-systemctl restart docker || log_warning "Не удалось перезагрузить Docker"
-sleep 5
-
-# Запуск всех контейнеров
+# Запуск контейнеров
 log_info "Запускаем контейнеры"
 docker-compose up -d
 
 # Проверка статуса
 log_info "Проверяем статус сервисов"
 docker-compose ps
-
-# Проверка логов БД при проблемах
-if ! docker ps | grep -q star-burger-db; then
-    log_error "PostgreSQL не запустился. Выводим логи:"
-    docker logs star-burger-db || true
-fi
 
 log_info "Деплой завершен!"

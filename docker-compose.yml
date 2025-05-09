@@ -3,19 +3,6 @@ version: '3.8'
 name: star-burger
 
 services:
-  db:
-    image: postgres:13-alpine
-    container_name: star-burger-db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=starburger_prod
-      - POSTGRES_USER=starburger_user
-      - POSTGRES_PASSWORD=0704
-    ports:
-      - "5432:5432"
-    restart: "no"
-
   backend:
     build: 
       context: ./backend
@@ -27,13 +14,12 @@ services:
       - media_volume:/opt/StarBurgerDockerizations/media
       - frontend_bundles:/opt/StarBurgerDockerizations/bundles
     environment:
-      - DATABASE_URL=postgres://starburger_user:0704@db:5432/starburger_prod
+      - DATABASE_URL=postgres://starburger_user:0704@localhost:5432/starburger_prod
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - YANDEX_GEOCODER_API_KEY=${YANDEX_GEOCODER_API_KEY}
-    depends_on:
-      - db
+    network_mode: "host"
     command: python -m gunicorn star_burger.wsgi:application --bind 0.0.0.0:8000
     restart: always
 
@@ -53,7 +39,6 @@ services:
     restart: always
 
 volumes:
-  postgres_data:
   media_volume:
   static_volume:
   frontend_bundles: 
