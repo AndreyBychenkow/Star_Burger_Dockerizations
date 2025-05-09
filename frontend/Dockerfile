@@ -5,6 +5,7 @@ WORKDIR /opt/star-burger
 # Установка зависимостей
 COPY package*.json ./
 RUN npm install
+RUN npm install regenerator-runtime --save
 
 # Копирование исходного кода
 COPY . .
