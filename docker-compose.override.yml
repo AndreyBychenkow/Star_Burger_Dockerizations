@@ -16,6 +16,14 @@ services:
     restart: "no"
 
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      cache_from:
+        - node:16-alpine
+    volumes:
+      - ./frontend:/opt/StarBurgerDockerizations:cached
+      - /opt/StarBurgerDockerizations/node_modules
     command: npm start
     environment:
       - NODE_ENV=development
