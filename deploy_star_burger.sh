@@ -11,150 +11,74 @@ NC='\033[0m'
 
 # Variables
 PROJECT_DIR="/opt/StarBurgerDockerizations"
-MAX_RETRIES=3
-RETRY_DELAY=10
+DOMAIN="starburger.decebell.site"
 
 # Functions
 log_info() {
-    echo -e "${GREEN}>>> $1${NC}"
+    echo -e "${GREEN}[INFO]${NC} $1"
 }
 
 log_warning() {
-    echo -e "${YELLOW}>>> Предупреждение: $1${NC}"
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 log_error() {
-    echo -e "${RED}>>> Ошибка: $1${NC}"
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
-wait_for_service() {
-    local service=$1
-    local max_attempts=$2
-    local attempt=1
+# Main script
+log_info "Начинаем деплой Star Burger"
 
-    while [ $attempt -le $max_attempts ]; do
-        if docker-compose ps $service | grep -q "Up"; then
-            return 0
-        fi
-        log_warning "Ожидание запуска $service (попытка $attempt/$max_attempts)"
-        sleep 5
-        attempt=$((attempt + 1))
-    done
-    return 1
-}
-
-# Load environment variables if .env exists
-if [ -f "$PROJECT_DIR/.env" ]; then
-    set -o allexport
-    source "$PROJECT_DIR/.env"
-    set +o allexport
-fi
-
-log_info "Начинаем деплой StarBurger"
-
-# 1. Обновляем код из Git
-log_info "Получаем изменения из Git"
+# Переходим в директорию проекта
 cd $PROJECT_DIR
-git fetch
-git reset --hard origin/master
 
-# 2. Проверяем наличие Docker и Docker Compose
-log_info "Проверяем Docker и Docker Compose"
-if ! command -v docker &> /dev/null; then
-    log_error "Docker не установлен"
+# Получаем последние изменения из Git
+log_info "Обновляем код из Git"
+git pull || log_warning "Не удалось получить обновления из Git"
+
+# Получаем текущий коммит
+CURRENT_COMMIT=$(git rev-parse HEAD)
+log_info "Текущий коммит: $CURRENT_COMMIT"
+
+# Проверяем наличие переменных окружения
+if [ ! -f ".env" ]; then
+    log_warning "Файл .env не найден. Убедитесь, что он существует и содержит необходимые переменные."
+    log_info "Требуются следующие переменные окружения:"
+    echo "SECRET_KEY"
+    echo "YANDEX_GEOCODER_API_KEY"
+    echo "ALLOWED_HOSTS (должен включать $DOMAIN)" 
+    echo "DB_USER, DB_PASSWORD, DB_NAME"
+    echo "POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB"
+    echo "DATABASE_URL"
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    log_error "Docker Compose не установлен"
-    exit 1
-fi
-
-# 3. Останавливаем старые контейнеры
+# Останавливаем и удаляем старые контейнеры
 log_info "Останавливаем старые контейнеры"
 docker-compose down || true
+docker rm -f star-burger-db star-burger-backend star-burger-frontend || true
 
-# 4. Собираем новые образы
-log_info "Собираем Docker образы"
-docker-compose build --no-cache
+# Очистка Docker-кэша
+log_info "Очищаем Docker-кэш"
+docker system prune -f || true
 
-# 5. Запускаем контейнеры
+# Перезагрузка Docker (крайняя мера для решения проблем с запуском)
+log_info "Перезагружаем Docker"
+systemctl restart docker || log_warning "Не удалось перезагрузить Docker"
+sleep 5
+
+# Запуск всех контейнеров
 log_info "Запускаем контейнеры"
 docker-compose up -d
 
-# 6. Ждем запуска сервисов
-log_info "Ожидаем запуска сервисов"
-if ! wait_for_service "db" $MAX_RETRIES; then
-    log_error "База данных не запустилась"
-    exit 1
-fi
-
-if ! wait_for_service "backend" $MAX_RETRIES; then
-    log_error "Backend не запустился"
-    exit 1
-fi
-
-# 7. Применяем миграции
-log_info "Применяем миграции БД"
-if ! docker-compose exec -T backend python manage.py migrate --noinput; then
-    log_error "Ошибка при применении миграций"
-    exit 1
-fi
-
-# 8. Собираем статику Django
-log_info "Собираем статику Django"
-if ! docker-compose exec -T backend python manage.py collectstatic --noinput; then
-    log_error "Ошибка при сборке статики"
-    exit 1
-fi
-
-# 9. Проверяем статус контейнеров
-log_info "Проверяем статус контейнеров"
+# Проверка статуса
+log_info "Проверяем статус сервисов"
 docker-compose ps
 
-# 10. Очищаем неиспользуемые образы и тома
-log_info "Очищаем неиспользуемые Docker ресурсы"
-docker system prune -f
-
-# 12. Проверяем работоспособность сервисов
-log_info "Проверяем работоспособность сервисов"
-for service in backend frontend; do
-    if ! docker-compose ps $service | grep -q "Up"; then
-        log_error "Сервис $service не запущен"
-        exit 1
-    fi
-done
-
-# Уведомляем Rollbar о деплое
-log_info "Уведомляем Rollbar о деплое"
-ROLLBAR_ACCESS_TOKEN="${TOKEN_ROLLBAR_PROD:-}"
-if [ -z "$ROLLBAR_ACCESS_TOKEN" ]; then
-    log_warning "Rollbar access token не найден, пропускаем уведомление"
-else
-    LOCAL_USERNAME=$(whoami)
-    CURRENT_COMMIT=$(git rev-parse HEAD)
-    COMMENT="Deployed via deploy_star_burger.sh using Docker"
-    ENVIRONMENT="production"
-
-    log_info "Отправляем уведомление в Rollbar (коммит: ${CURRENT_COMMIT})"
-
-    RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" https://api.rollbar.com/api/1/deploy/ \
-        -F "access_token=$ROLLBAR_ACCESS_TOKEN" \
-        -F "environment=$ENVIRONMENT" \
-        -F "revision=$CURRENT_COMMIT" \
-        -F "local_username=$LOCAL_USERNAME" \
-        -F "comment=$COMMENT" \
-        -F "status=succeeded" 2>&1)
-
-    HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | sed 's/.*HTTP_STATUS://')
-    BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
-
-    if [ "$HTTP_STATUS" -eq 200 ]; then
-        log_info "Rollbar успешно уведомлен о деплое"
-    else
-        log_warning "Не удалось уведомить Rollbar (HTTP $HTTP_STATUS)"
-        log_warning "Ответ сервера: $BODY"
-    fi
+# Проверка логов БД при проблемах
+if ! docker ps | grep -q star-burger-db; then
+    log_error "PostgreSQL не запустился. Выводим логи:"
+    docker logs star-burger-db || true
 fi
 
-log_info "Деплой успешно завершен!"
+log_info "Деплой завершен!"

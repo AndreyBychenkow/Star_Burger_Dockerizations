@@ -13,14 +13,8 @@ services:
       - POSTGRES_USER=starburger_user
       - POSTGRES_PASSWORD=0704
     ports:
-      - "5433:5432"
-    restart: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U starburger_user -d starburger_prod"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - "5432:5432"
+    restart: "no"
 
   backend:
     build: 
@@ -39,8 +33,7 @@ services:
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - YANDEX_GEOCODER_API_KEY=${YANDEX_GEOCODER_API_KEY}
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     command: python -m gunicorn star_burger.wsgi:application --bind 0.0.0.0:8000
     restart: always
 
