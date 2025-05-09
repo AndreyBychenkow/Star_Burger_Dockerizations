@@ -1,5 +1,3 @@
-version: '3.8'
-
 name: star-burger
 
 services:
@@ -12,7 +10,8 @@ services:
       - POSTGRES_USER=starburger_user
       - POSTGRES_PASSWORD=0704
       - POSTGRES_DB=starburger_prod
-    network_mode: "host"
+    ports:
+      - "5432:5432"
     restart: always
   
   backend:
@@ -26,13 +25,19 @@ services:
       - media_volume:/opt/StarBurgerDockerizations/media
       - frontend_bundles:/opt/StarBurgerDockerizations/bundles
     environment:
-      - DATABASE_URL=postgres://starburger_user:0704@localhost:5432/starburger_prod
-      - DEBUG=False
-      - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - YANDEX_GEOCODER_API_KEY=${YANDEX_GEOCODER_API_KEY}
-    network_mode: "host"
-    command: python -m gunicorn star_burger.wsgi:application --bind 0.0.0.0:8000
+      - DATABASE_URL=postgres://starburger_user:0704@db:5432/starburger_prod
+      - DEBUG=True
+      - SECRET_KEY=${SECRET_KEY:-supersecretdefaultkey}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - YANDEX_GEOCODER_API_KEY=${YANDEX_GEOCODER_API_KEY:-}
+    ports:
+      - "8000:8000"
+    entrypoint: >
+      sh -c "
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        python -m gunicorn star_burger.wsgi:application --bind 0.0.0.0:8000
+      "
     depends_on:
       - db
     restart: always

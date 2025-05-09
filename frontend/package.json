@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Star Burger Frontend",
   "scripts": {
-    "start": "parcel serve bundles-src/index.js --out-dir bundles --public-url ./",
-    "build": "parcel build bundles-src/index.js --out-dir bundles --public-url ./ --no-cache",
-    "build:simple": "parcel build bundles-src/index.js --out-dir bundles --public-url ./ --no-minify --no-cache"
+    "start": "parcel serve bundles-src/index.js --dist-dir bundles --public-url ./",
+    "build": "parcel build bundles-src/index.js --dist-dir bundles --public-url ./ --no-cache",
+    "build:simple": "parcel build bundles-src/index.js --dist-dir bundles --public-url ./ --no-minify --no-cache"
   },
   "browserslist": [
     "last 2 chrome versions"
@@ -27,7 +27,8 @@
     "react": "^17.0.2",
     "react-bootstrap": "^0.33.1",
     "react-dom": "^17.0.2",
-    "react-transition-group": "^4.4.2"
+    "react-transition-group": "^4.4.2",
+    "regenerator-runtime": "^0.14.1"
   },
   "devDependencies": {
     "@babel/core": "^7.15.0",

@@ -1,24 +1,38 @@
-FROM node:16-alpine as builder
+FROM node:16-alpine as build
 
-WORKDIR /opt/StarBurgerDockerizations
+WORKDIR /app
 
-# Установка зависимостей
+# Копируем файлы package.json и устанавливаем зависимости
 COPY package*.json ./
-RUN npm install --no-audit --prefer-offline
-RUN npm install regenerator-runtime --save
+RUN npm install
 
-# Копирование исходного кода
+# Копируем исходники
 COPY . .
 
-# Сборка для production
-RUN ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
+# Создаем директории если их нет
+RUN mkdir -p static
+RUN touch static/icon.png
 
-# Финальный этап - только собранные файлы
+# Собираем приложение
+RUN npm run build
+
+# Второй этап - nginx сервер со статикой
 FROM nginx:alpine
 
-COPY --from=builder /opt/StarBurgerDockerizations/bundles /usr/share/nginx/html/bundles
+# Создаем директории
+RUN mkdir -p /usr/share/nginx/html/static
+RUN mkdir -p /usr/share/nginx/html/media
+RUN mkdir -p /usr/share/nginx/html/bundles
+
+# Копируем собранные файлы
+COPY --from=build /app/bundles/ /usr/share/nginx/html/bundles/
+COPY --from=build /app/index.html /usr/share/nginx/html/index.html
+COPY --from=build /app/static/ /usr/share/nginx/html/static/
+
+# Копируем конфигурацию nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
+# Запускаем nginx
 CMD ["nginx", "-g", "daemon off;"]
