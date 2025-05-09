@@ -72,6 +72,24 @@ log_info "Запускаем PostgreSQL на хосте"
 systemctl restart postgresql
 systemctl status postgresql --no-pager
 
+# Установка соединения с localhost в pg_hba.conf
+log_info "Настраиваем pg_hba.conf для доступа по localhost"
+PG_VERSION=$(ls /etc/postgresql/)
+PG_HBA_PATH="/etc/postgresql/$PG_VERSION/main/pg_hba.conf"
+if grep -q "local   all             starburger_user                        md5" "$PG_HBA_PATH"; then
+    log_info "Конфигурация pg_hba.conf уже настроена"
+else
+    log_info "Добавляем правила в pg_hba.conf"
+    cat << EOF | sudo tee -a "$PG_HBA_PATH"
+# StarBurger - локальный доступ
+local   all             starburger_user                        md5
+host    all             starburger_user        127.0.0.1/32    md5
+host    all             starburger_user        ::1/128         md5
+EOF
+    # Перезапускаем PostgreSQL для применения изменений
+    systemctl restart postgresql
+fi
+
 # Останавливаем и удаляем старые контейнеры
 log_info "Останавливаем старые контейнеры"
 docker-compose down || true
