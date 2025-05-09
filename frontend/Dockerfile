@@ -2,9 +2,10 @@ FROM node:16-alpine as builder
 
 WORKDIR /opt/StarBurgerDockerizations
 
-# Установка отдельно зависимостей для кэширования слоя
-COPY package.json package-lock.json* ./
-RUN npm ci --prefer-offline --no-audit --progress=false
+# Установка зависимостей
+COPY package*.json ./
+RUN npm install --no-audit --prefer-offline
+RUN npm install regenerator-runtime --save
 
 # Копирование исходного кода
 COPY . .
