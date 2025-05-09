@@ -80,7 +80,6 @@ cd /opt/StarBurgerDockerizations
 #### 3. Настройка переменных окружения
 Создайте `.env` файл с боевыми настройками:
 ```bash
-cat > .env << EOL
 SECRET_KEY=your_secure_production_key
 DEBUG=False
 ALLOWED_HOSTS=your-domain.com,www.your-domain.com
@@ -91,7 +90,6 @@ ROLLBAR_ENVIRONMENT=production
 DB_PASSWORD=your password
 DB_USER=your_db_user
 DB_NAME=name_your_db
-EOL
 ```
 
 **Проект доступен по ссылке:** [Демо-версия](http://starburger.decebell.site)
@@ -116,7 +114,6 @@ certbot --nginx -d your-domain.com
 
 Создайте конфигурацию Nginx:
 ```bash
-cat > /etc/nginx/sites-available/starburger.conf << EOL
 server {
     listen 80;
     server_name your-domain.com;
@@ -138,7 +135,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-EOL
 ```
 
 Активируйте конфигурацию:
