@@ -4,7 +4,7 @@ WORKDIR /opt/star-burger
 
 # Установка зависимостей
 COPY package*.json ./
-RUN npm ci --dev
+RUN npm install
 
 # Копирование исходного кода
 COPY . .
