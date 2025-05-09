@@ -1,3 +1,7 @@
+version: '3.8'
+
+name: star-burger
+
 services:
   db:
     image: postgres:13-alpine
@@ -5,15 +9,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    command: postgres -c shared_buffers=128MB
+      - POSTGRES_DB=starburger_prod
+      - POSTGRES_USER=starburger_user
+      - POSTGRES_PASSWORD=0704
     ports:
       - "5433:5432"
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U starburger_user -d starburger_prod"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,13 +26,14 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
+    container_name: star-burger-backend
     volumes:
       - ./backend:/opt/StarBurgerDockerizations:delegated
       - static_volume:/opt/StarBurgerDockerizations/staticfiles
       - media_volume:/opt/StarBurgerDockerizations/media
       - frontend_bundles:/opt/StarBurgerDockerizations/bundles
     environment:
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - DATABASE_URL=postgres://starburger_user:0704@db:5432/starburger_prod
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
@@ -44,6 +48,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: star-burger-frontend
     volumes:
       - static_volume:/usr/share/nginx/html/static
       - media_volume:/usr/share/nginx/html/media
