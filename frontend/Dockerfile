@@ -16,6 +16,10 @@ RUN touch static/icon.png
 # Собираем приложение
 RUN npm run build
 
+# Вывод информации о созданных файлах для отладки
+RUN ls -la bundles/
+RUN ls -la static/
+
 # Второй этап - nginx сервер со статикой
 FROM nginx:alpine
 
@@ -29,8 +33,16 @@ COPY --from=build /app/bundles/ /usr/share/nginx/html/bundles/
 COPY --from=build /app/index.html /usr/share/nginx/html/index.html
 COPY --from=build /app/static/ /usr/share/nginx/html/static/
 
+# Создаем файлы-заглушки если их не хватает
+RUN touch /usr/share/nginx/html/bundles/index.js
+RUN touch /usr/share/nginx/html/bundles/index.css
+
 # Копируем конфигурацию nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Проверяем наличие файлов
+RUN ls -la /usr/share/nginx/html/
+RUN ls -la /usr/share/nginx/html/bundles/
 
 EXPOSE 80
 
