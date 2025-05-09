@@ -1,22 +1,20 @@
 services:
   db:
     image: postgres:13-alpine
+    container_name: star-burger-db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_HOST_AUTH_METHOD=trust
-      - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_INITDB_ARGS=--data-checksums
-    command: postgres -c shared_buffers=128MB -c fsync=off -c synchronous_commit=off -c full_page_writes=off
+    command: postgres -c shared_buffers=128MB
     ports:
       - "5433:5432"
-    restart: always
+    restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U starburger_user"]
+      interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
