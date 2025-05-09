@@ -116,13 +116,9 @@ docker-compose ps
 log_info "Очищаем неиспользуемые Docker ресурсы"
 docker system prune -f
 
-# 11. Перезапускаем nginx в Docker
-log_info "Перезапускаем nginx"
-docker-compose restart nginx
-
 # 12. Проверяем работоспособность сервисов
 log_info "Проверяем работоспособность сервисов"
-for service in backend frontend nginx; do
+for service in backend frontend; do
     if ! docker-compose ps $service | grep -q "Up"; then
         log_error "Сервис $service не запущен"
         exit 1
