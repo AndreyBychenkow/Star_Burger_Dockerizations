@@ -32,10 +32,18 @@ cd "$PROJECT_DIR" || exit 1
 git fetch
 git reset --hard origin/master
 
-# 2. Создание отсутствующих папок
-echo -e "${GREEN}>>> Проверяем необходимые директории${NC}"
-mkdir -p "$PROJECT_DIR/assets" "$PROJECT_DIR/staticfiles" "$PROJECT_DIR/media"
-chmod -R 755 "$PROJECT_DIR/assets"
+# 2. Создаем необходимые директории
+echo -e "${GREEN}>>> Создаем необходимые директории${NC}"
+mkdir -p "$PROJECT_DIR/assets" \
+         "$PROJECT_DIR/staticfiles" \
+         "$PROJECT_DIR/media" \
+         "$PROJECT_DIR/bundles"
+
+# Устанавливаем правильные права
+chmod 755 "$PROJECT_DIR/assets" \
+          "$PROJECT_DIR/staticfiles" \
+          "$PROJECT_DIR/media" \
+          "$PROJECT_DIR/bundles"
 
 # 3. Остановка старых контейнеров
 echo -e "${GREEN}>>> Останавливаем старые контейнеры${NC}"
