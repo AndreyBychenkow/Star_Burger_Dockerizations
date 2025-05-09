@@ -15,7 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Создание необходимых директорий
-RUN mkdir -p /opt/StarBurger/assets /opt/StarBurger/bundles /opt/StarBurger/staticfiles /opt/StarBurger/media
+RUN mkdir -p /opt/StarBurger/staticfiles \
+    /opt/StarBurger/media \
+    /opt/StarBurger/bundles
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
