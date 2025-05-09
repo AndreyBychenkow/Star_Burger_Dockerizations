@@ -1,0 +1,38 @@
+{
+  "name": "star-burger-frontend",
+  "version": "1.0.0",
+  "description": "Star Burger Frontend",
+  "scripts": {
+    "start": "parcel serve bundles-src/index.js --out-dir bundles --public-url ./",
+    "build": "parcel build bundles-src/index.js --out-dir bundles --public-url ./ --no-cache",
+    "build:simple": "parcel build bundles-src/index.js --out-dir bundles --public-url ./ --no-minify --no-cache"
+  },
+  "browserslist": [
+    "last 2 chrome versions"
+  ],
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/preset-react": "^7.16.7",
+    "core-js": "^3.21.1",
+    "lodash": "^4.17.21",
+    "react": "^17.0.2",
+    "react-bootstrap": "^0.33.1",
+    "react-dom": "^17.0.2",
+    "react-transition-group": "^4.4.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.16.11",
+    "parcel": "^2.7.0",
+    "sass": "^1.32.8"
+  }
+}

@@ -1,0 +1,192 @@
+{% extends 'base_restaurateur_page.html' %}
+
+{% block title %}Необработанные заказы | Star Burger{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center">Необработанные заказы</h2>
+  <hr />
+
+  <table class="table table-hover table-responsive font-lg">
+    <thead class="thead-light">
+    <tr>
+      <th>ID</th>
+      <th>Статус</th>
+      <th>Оплата</th>
+      <th>Создан</th>
+      <th>Клиент</th>
+      <th>Телефон</th>
+      <th>Адрес</th>
+      <th>Сумма</th>
+      <th>Комментарий</th>
+      <th>Рестораны</th>
+      <th>Ссылка на админку</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for order in orders %}
+    <tr class="{% if order.status == 'processing' %}table-warning{% endif %}">
+      <td class="id-cell">{{ order.id }}</td>
+      <td class="status-cell">
+          <span class="badge
+            {% if order.status == 'new' %}badge-secondary
+            {% elif order.status == 'processing' %}badge-warning
+            {% else %}badge-light{% endif %}">
+            {{ order.get_status_display }}
+          </span>
+      </td>
+      <td class="payment-method">
+          <span class="payment-badge">
+            {{ order.get_payment_method_display }}
+          </span>
+      </td>
+      <td class="created-cell">{{ order.created_at|date:"d.m H:i" }}</td>
+      <td class="client-cell">{{ order.firstname }} {{ order.lastname }}</td>
+      <td class="phone-cell">{{ order.phonenumber }}</td>
+      <td class="address-cell">{{ order.address }}</td>
+      <td class="order-price">{{ order.total_price }} ₽</td>
+      <td class="order-comment">
+        {% if order.comment %}
+        <details>
+          <summary>📝 Показать</summary>
+          <div class="comment-content">{{ order.comment }}</div>
+        </details>
+        {% else %}
+        —
+        {% endif %}
+      </td>
+      <td class="restaurant-info">
+        {% if order.restaurant %}
+        <div class="selected-restaurant">
+          ✅ {{ order.restaurant.name }}
+          <div class="text-muted small">{{ order.restaurant.address }}</div>
+        </div>
+        {% else %}
+        <details class="restaurants-dropdown">
+          <summary>
+                <span class="badge badge-warning">
+                  🏪 Выбрать ({{ order.restaurant_distances|length }})
+                </span>
+          </summary>
+          <div class="restaurant-list">
+            {% for restaurant_data in order.restaurant_distances %}
+            <div class="restaurant-item">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="font-weight-bold">{{ restaurant_data.restaurant.name }}</div>
+                  <div class="text-muted small">{{ restaurant_data.restaurant.address }}</div>
+                </div>
+                <div class="pl-3 text-nowrap">
+                  {% if restaurant_data.distance %}
+                  <span class="badge badge-info">
+                            {{ restaurant_data.distance }} км
+                          </span>
+                  {% else %}
+                  <span class="text-danger small">?</span>
+                  {% endif %}
+                </div>
+              </div>
+              <a href="{% url 'admin:foodcartapp_order_change' order.id %}?restaurant={{ restaurant_data.restaurant.id }}&next={{ request.get_full_path|urlencode }}"
+                 class="btn btn-sm btn-link py-0">
+                Выбрать
+              </a>
+            </div>
+            {% if not forloop.last %}<hr>{% endif %}
+            {% empty %}
+            <div class="text-danger small">
+              ⚠ Нет подходящих ресторанов
+            </div>
+            {% endfor %}
+          </div>
+        </details>
+        {% endif %}
+      </td>
+      <td>
+        <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.get_full_path|urlencode }}"
+           class="edit-btn">
+          ✎ Редактировать
+        </a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="11" class="empty-msg text-center">Нет новых заказов</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .font-lg { font-size: 1.1rem; }
+  .payment-method { min-width: 140px; }
+  .payment-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  .status-cell { font-weight: 500; }
+  .order-price {
+    font-weight: 600;
+    color: #2e7d32;
+    white-space: nowrap;
+  }
+  .comment-content {
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+  .edit-btn {
+    color: #3b82f6;
+    text-decoration: none;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .edit-btn:hover { background: #e8f4ff; }
+  .empty-msg {
+    color: #757575;
+    padding: 20px !important;
+  }
+  th {
+    background: #f5f5f5;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .restaurant-info { min-width: 250px; }
+  .restaurant-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+  .restaurant-item {
+    padding: 5px 0;
+  }
+  .selected-restaurant {
+    background: #dff0d8;
+    padding: 6px;
+    border-radius: 4px;
+  }
+  .badge-restaurant {
+    background-color: #c3e6cb;
+    color: #155724;
+  }
+  .badge-warning { background: #fff3cd; color: #856404; }
+
+
+  .id-cell { color: #343a40; background-color: #f8f9fa; }
+  .status-cell {background-color: #ffeeba; }
+  .created-cell { background-color: #fff3cd; }
+  .client-cell { color: #006400; }
+  .phone-cell { color: #00008B; }
+  .address-cell { color: #A52A2A; }
+  .order-price { color: #dc3545; }
+</style>
+{% endblock %}
