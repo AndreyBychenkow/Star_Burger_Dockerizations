@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-alpine as builder
 
 WORKDIR /app
 
@@ -10,14 +10,19 @@ RUN npm config set fetch-retry-mintimeout 20000 && \
 
 # Копирование и установка зависимостей
 COPY package*.json ./
-RUN npm install --verbose
+RUN npm ci --verbose
 
 # Копирование исходного кода
 COPY . .
 
-# Сборка проекта
-RUN npm run build:simple
+# Сборка для production напрямую через parcel 
+RUN ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 
-EXPOSE 1234
+# Финальный этап - только собранные файлы
+FROM nginx:alpine
 
-CMD ["npm", "start"]
+COPY --from=builder /app/bundles /usr/share/nginx/html/bundles
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
