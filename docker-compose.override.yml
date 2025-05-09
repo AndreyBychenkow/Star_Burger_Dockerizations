@@ -1,10 +1,10 @@
 services:
   backend:
     volumes:
-      - ./backend:/opt/StarBurger:rw
-      - static_volume:/opt/StarBurger/staticfiles:rw
-      - media_volume:/opt/StarBurger/media:rw
-      - frontend_bundles:/opt/StarBurger/staticfiles/bundles:rw
+      - ./backend:/opt/StarBurgerDockerizations:rw
+      - static_volume:/opt/StarBurgerDockerizations/staticfiles:rw
+      - media_volume:/opt/StarBurgerDockerizations/media:rw
+      - frontend_bundles:/opt/StarBurgerDockerizations/staticfiles/bundles:rw
     command: sh -c "python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"

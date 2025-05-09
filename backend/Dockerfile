@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-WORKDIR /opt/StarBurger
+WORKDIR /opt/StarBurgerDockerizations
 
 # Установка зависимостей для снижения размера образа
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -15,9 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Создание необходимых директорий
-RUN mkdir -p /opt/StarBurger/staticfiles \
-    /opt/StarBurger/media \
-    /opt/StarBurger/bundles
+RUN mkdir -p /opt/StarBurgerDockerizations/staticfiles \
+    /opt/StarBurgerDockerizations/media \
+    /opt/StarBurgerDockerizations/bundles
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

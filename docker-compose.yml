@@ -21,10 +21,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - ./backend:/opt/StarBurger:delegated
-      - static_volume:/opt/StarBurger/staticfiles
-      - media_volume:/opt/StarBurger/media
-      - frontend_bundles:/opt/StarBurger/bundles
+      - ./backend:/opt/StarBurgerDockerizations:delegated
+      - static_volume:/opt/StarBurgerDockerizations/staticfiles
+      - media_volume:/opt/StarBurgerDockerizations/media
+      - frontend_bundles:/opt/StarBurgerDockerizations/bundles
     environment:
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       - DEBUG=False

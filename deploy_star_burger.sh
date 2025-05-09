@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 # Variables
-PROJECT_DIR="/opt/StarBurger"
+PROJECT_DIR="/opt/StarBurgerDockerizations"
 MAX_RETRIES=3
 RETRY_DELAY=10
 

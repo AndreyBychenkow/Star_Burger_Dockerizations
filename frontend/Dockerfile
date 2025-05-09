@@ -1,6 +1,6 @@
 FROM node:16-alpine as builder
 
-WORKDIR /opt/star-burger
+WORKDIR /opt/StarBurgerDockerizations
 
 # Установка зависимостей
 COPY package*.json ./
@@ -16,7 +16,7 @@ RUN ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --p
 # Финальный этап - только собранные файлы
 FROM nginx:alpine
 
-COPY --from=builder /opt/star-burger/bundles /usr/share/nginx/html/bundles
+COPY --from=builder /opt/StarBurgerDockerizations/bundles /usr/share/nginx/html/bundles
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
