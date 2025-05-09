@@ -36,12 +36,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     volumes:
-      - ./frontend:/app:delegated
       - frontend_bundles:/app/bundles
+    environment:
+      - NODE_ENV=production
     depends_on:
       - backend
     ports:
       - "1234:1234"
+    command: npm start
     restart: always
 
   nginx:
